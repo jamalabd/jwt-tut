@@ -5,13 +5,6 @@ const bcrypt = require("bcrypt");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 
-const users = [
-  {
-    name: "jamal",
-    password: "password",
-  },
-];
-
 let = refreshTokens = [];
 
 app.use(bodyParser.json());
@@ -23,8 +16,8 @@ const genAccessToken = (user) => {
 
 app.post("/token", (req, res) => {
   const refreshToken = req.body.token;
-  if (refreshToken == null) return sendStatus(401);
-  if (!refreshTokens.includes(refreshToken)) return sendStatus(403);
+  if (refreshToken == null) return res.sendStatus(401);
+  if (!refreshTokens.includes(refreshToken)) return res.sendStatus(403);
   jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
     if (err) return res.sendStatus(403);
     const accessToken = genAccessToken({ name: user.name });
@@ -47,8 +40,9 @@ app.post("/users/register", async (req, res) => {
 });
 
 app.delete("/logout", (req, res) => {
-  refreshTokens.filter((token) => token !== req.body.token);
+  refreshTokens = refreshTokens.filter((token) => token !== req.body.token);
   res.sendStatus(204);
+  console.log(refreshTokens);
 });
 
 app.post("/users/login", (req, res) => {
@@ -62,8 +56,9 @@ app.post("/users/login", (req, res) => {
       // creating jwt accessToken and sending it to the client
 
       const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
-      refreshTokens.push(refreshToken);
       const accessToken = genAccessToken(user);
+      refreshTokens.push(refreshToken);
+
       res.json({ accessToken: accessToken, refreshToken: refreshToken });
     } else {
       res.send("Not Allowed");
